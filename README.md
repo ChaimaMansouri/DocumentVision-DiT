@@ -235,65 +235,6 @@ TrainingArguments
 
 ---
 
-## 📁 Project Structure
-
-A recommended repository structure is:
-
-```text
-DocumentVision-DiT/
-│
-├── README.md
-├── notebook/
-│   └── document_classification.ipynb
-│
-├── results/
-│   ├── training_results/
-│   └── figures/
-│
-├── requirements.txt
-│
-└── .gitignore
-```
-
-> The exact repository structure can be adjusted depending on whether the project is kept as a notebook-based experiment or converted into a modular Python project.
-
----
-
-## 🚀 Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/DocumentVision-DiT.git
-cd DocumentVision-DiT
-```
-
-Install the required dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## 📦 Requirements
-
-Example dependencies:
-
-```text
-torch
-torchvision
-transformers
-datasets
-scikit-learn
-numpy
-pillow
-matplotlib
-```
-
-For GPU training, an appropriate CUDA-compatible PyTorch installation is recommended.
-
----
 
 ## ▶️ Running the Project
 
@@ -427,10 +368,4 @@ The system can therefore be used as a starting point for automated document orga
 
 
 
----
 
-## ⭐ Acknowledgment
-
-This project was developed as an exploration of **Deep Learning, Vision Transformers, Transfer Learning, and Document Image Classification**.
-
-If you find this project useful, feel free to ⭐ star the repository.
