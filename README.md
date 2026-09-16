@@ -10,38 +10,26 @@ The system classifies document images into **10 predefined categories** using tr
 
 ## 🎯 Project Overview
 
-Document collections often contain different types of documents such as emails, forms, letters, reports, resumes, and scientific documents.
-
-Manually organizing large collections can be time-consuming. This project explores an automated deep learning approach for recognizing the type of a document directly from its image.
-
-The project uses a pretrained **Microsoft DiT model** and adapts its classification head to the 10 document categories available in the Tobacco3482 dataset.
+The project aims to automatically recognize document types from images, reducing the need for manual document organization.
 
 ### Main Pipeline
 
 ```text
 Tobacco3482 Dataset
-        │
-        ▼
-Document Images
-        │
-        ▼
-Train / Validation Split
-        │
-        ▼
-Image Preprocessing
-(AutoImageProcessor)
-        │
-        ▼
+        ↓
+Image Collection
+        ↓
+Stratified Train / Validation Split
+        ↓
+AutoImageProcessor
+        ↓
 Pretrained DiT
-        │
-        ▼
+        ↓
 Fine-Tuning
-        │
-        ▼
+        ↓
 10-Class Classification
-        │
-        ▼
-Model Evaluation
+        ↓
+Validation Evaluation
 ```
 
 ---
@@ -58,28 +46,18 @@ Pretrained model:
 microsoft/dit-base-finetuned-rvlcdip
 ```
 
-The original pretrained model was adapted to the target dataset using:
+The pretrained model is adapted to the **10 Tobacco3482 classes**.
 
-* Transfer Learning
-* Fine-Tuning
-* A new classification head
-* 10 target classes
-
-The original classifier contains 16 output classes, while Tobacco3482 contains 10 classes in this project. Therefore, the classification layer is reinitialized to match the target number of classes.
+The original classifier has **16 classes**, so the classification layer is reinitialized for the 10 target classes.
 
 ---
 
 ## 📊 Dataset
 
-The project uses the **Tobacco3482** document image dataset.
+The project uses the **Tobacco3482** dataset.
 
-Dataset:
-
-```text
-patrickaudriaz/tobacco3482jpg
-```
-
-The dataset contains **3,482 document images** organized into 10 categories.
+* **3,482 document images**
+* **10 document categories**
 
 ### Classes
 
@@ -98,41 +76,15 @@ The dataset contains **3,482 document images** organized into 10 categories.
 
 ---
 
-## 🗂️ Dataset Structure
-
-The images are organized according to their class:
-
-```text
-Tobacco3482-jpg/
-│
-├── ADVE/
-├── Email/
-├── Form/
-├── Letter/
-├── Memo/
-├── News/
-├── Note/
-├── Report/
-├── Resume/
-└── Scientific/
-```
-
-Each folder represents one document category.
-
----
-
 ## 🔄 Data Preparation
 
-The project performs the following preparation steps:
+The notebook:
 
-1. Locate the dataset.
-2. Collect image paths.
-3. Generate numerical labels from folder names.
-4. Map class names to class IDs.
-5. Split the dataset into training and validation sets.
-6. Use the model-specific `AutoImageProcessor` to prepare the images.
-
-The split uses **stratified sampling** to preserve the distribution of document classes.
+1. Loads the dataset.
+2. Collects image paths and labels.
+3. Encodes categories into numerical IDs.
+4. Performs an **80/20 stratified train-validation split**.
+5. Processes images using the pretrained model's `AutoImageProcessor`.
 
 ```python
 train_test_split(
@@ -144,76 +96,61 @@ train_test_split(
 )
 ```
 
-The current implementation uses:
+### Image Processing
 
-```text
-80% Training
-20% Validation
-```
+No manual augmentation pipeline is implemented in the notebook. Images are prepared through the DiT-associated `AutoImageProcessor`.
 
 ---
 
 ## ⚙️ Training Configuration
 
-The main training configuration includes:
-
-| Parameter              |                                  Value |
-| ---------------------- | -------------------------------------: |
-| Model                  | `microsoft/dit-base-finetuned-rvlcdip` |
-| Dataset                |                            Tobacco3482 |
-| Number of classes      |                                     10 |
-| Train/Validation split |                                  80/20 |
-| Batch size             |                                      8 |
-| Learning rate          |                                 `2e-5` |
-| Epochs                 |                                     10 |
-| Weight decay           |                                 `0.01` |
-| Random state           |                                     42 |
-| Mixed precision        |            FP16 when CUDA is available |
-| Framework              |    PyTorch / Hugging Face Transformers |
+| Parameter          | Value                                  |
+| ------------------ | -------------------------------------- |
+| Model              | `microsoft/dit-base-finetuned-rvlcdip` |
+| Dataset            | Tobacco3482                            |
+| Classes            | 10                                     |
+| Train / Validation | 80 / 20                                |
+| Batch size         | 8                                      |
+| Learning rate      | `2e-5`                                 |
+| Epochs             | 10                                     |
+| Weight decay       | `0.01`                                 |
+| Random state       | 42                                     |
+| Mixed precision    | FP16 when CUDA is available            |
+| Framework          | PyTorch / Hugging Face Transformers    |
 
 ---
 
 ## 📈 Results
 
-After fine-tuning for 10 epochs, the model achieved:
+The model was trained for **10 epochs** and evaluated on the validation set.
 
-### **96.27% Validation Accuracy**
+### Final Validation Performance
 
-The best observed validation accuracy during training was approximately:
+* **Validation Accuracy:** **96.27%**
+* **Evaluation Loss:** **0.3530**
 
-### **96.56%**
+The highest observed validation accuracy during training was:
 
-The final evaluation reported:
+**96.56% at Epoch 7**
 
-```text
-Evaluation Loss:      0.353009
-Validation Accuracy:  0.962697
-```
+| Epoch | Training Loss | Validation Loss |   Accuracy |
+| ----: | ------------: | --------------: | ---------: |
+|     1 |        2.4833 |          1.9019 |     90.53% |
+|     2 |        1.1780 |          0.9235 |     94.26% |
+|     3 |        0.5889 |          0.5585 |     95.70% |
+|     4 |        0.2858 |          0.4286 |     95.84% |
+|     5 |        0.3016 |          0.3949 |     95.84% |
+|     6 |        0.2069 |          0.3780 |     95.84% |
+|     7 |        0.1563 |          0.3599 | **96.56%** |
+|     8 |        0.1414 |      **0.3530** |     96.27% |
+|     9 |        0.1093 |          0.3711 |     96.27% |
+|    10 |        0.1033 |          0.3635 |     96.27% |
 
-### Training Progress
-
-| Epoch | Training Loss | Validation Loss | Validation Accuracy |
-| ----: | ------------: | --------------: | ------------------: |
-|     1 |         2.483 |           1.902 |              90.53% |
-|     2 |         1.178 |           0.924 |              94.26% |
-|     3 |         0.589 |           0.558 |              95.70% |
-|     4 |         0.286 |           0.429 |              95.84% |
-|     5 |         0.302 |           0.395 |              95.84% |
-|     6 |         0.207 |           0.378 |              95.84% |
-|     7 |         0.156 |           0.360 |          **96.56%** |
-|     8 |         0.141 |       **0.353** |              96.27% |
-|     9 |         0.109 |           0.371 |              96.27% |
-|    10 |         0.103 |           0.364 |              96.27% |
-
-> **Note:** The reported performance is validation performance. The current implementation does not include an independent test set.
+> Performance reported here is based on the validation split. The notebook does not include an independent test set.
 
 ---
 
 ## 💻 Technologies
-
-The project is implemented using Python and modern deep learning libraries.
-
-### Main technologies
 
 * Python
 * PyTorch
@@ -222,11 +159,13 @@ The project is implemented using Python and modern deep learning libraries.
 * Scikit-learn
 * PIL
 * NumPy
-* Matplotlib
+* Jupyter Notebook
+* Google Colab
+* Kaggle
 
-### Main Hugging Face components
+### Main Components
 
-```python
+```text
 AutoImageProcessor
 AutoModelForImageClassification
 Trainer
@@ -235,38 +174,17 @@ TrainingArguments
 
 ---
 
-
 ## ▶️ Running the Project
 
-The project can be executed using the provided Jupyter Notebook.
-
-```bash
-jupyter notebook
-```
-
-Then open:
+The project is provided as a Jupyter Notebook:
 
 ```text
-document_classification.ipynb
+index.ipynb
 ```
 
-The notebook performs:
+The notebook downloads the Tobacco3482 dataset using the **Kaggle API**, prepares the images, fine-tunes the DiT model, and evaluates its validation performance.
 
-```text
-Dataset loading
-      ↓
-Class identification
-      ↓
-Train/Validation split
-      ↓
-Image preprocessing
-      ↓
-Model initialization
-      ↓
-Fine-tuning
-      ↓
-Evaluation
-```
+The current notebook execution uses a **Google Colab environment**, with Kaggle dataset download commands and Google Drive access for the Kaggle API credentials.
 
 ---
 
@@ -274,98 +192,61 @@ Evaluation
 
 ### 1. Dataset Loading
 
-The Tobacco3482 dataset is downloaded and organized according to document categories.
+The Tobacco3482 dataset is downloaded and organized by document category.
 
 ### 2. Label Encoding
 
-Each document category is converted into a numerical class ID.
+Each category is mapped to a numerical class ID.
 
 ### 3. Stratified Splitting
 
-The dataset is divided into training and validation subsets while preserving class proportions.
+The data is divided into training and validation subsets while preserving class proportions.
 
 ### 4. Image Processing
 
-Images are processed using the image processor associated with the pretrained DiT model.
+Images are converted to RGB and processed using `AutoImageProcessor`.
 
 ### 5. Transfer Learning
 
-A pretrained DiT model is loaded to take advantage of previously learned visual representations.
+A pretrained DiT model is loaded using the `microsoft/dit-base-finetuned-rvlcdip` checkpoint.
 
 ### 6. Fine-Tuning
 
-The model is fine-tuned on the Tobacco3482 dataset.
-
-The final classification layer is adapted from the original 16-class configuration to the 10 target classes.
+The model is fine-tuned for the 10 Tobacco3482 categories.
 
 ### 7. Evaluation
 
-The model is evaluated using validation accuracy and validation loss.
+Performance is measured using **validation accuracy** and **validation loss**.
 
 ---
 
 ## ⚠️ Current Limitations
 
-The current version is a baseline implementation and has several limitations:
-
-* No independent test set is currently used.
-* Evaluation is mainly based on accuracy.
-* Precision, recall, F1-score, and confusion matrix are not yet included.
-* Per-class performance analysis is not currently reported.
-* The current notebook contains some environment-specific dataset loading code.
-* Further experiments are needed to assess generalization.
-
-These limitations provide opportunities for future improvements.
+* No independent test set is included.
+* Evaluation currently focuses on accuracy and loss.
+* No precision, recall, F1-score, or confusion matrix is reported.
+* No per-class performance analysis is included.
+* The notebook depends on environment-specific Kaggle and Google Drive configuration.
 
 ---
 
 ## 🔮 Future Improvements
 
-Possible extensions include:
-
-* [ ] Add an independent test set
-* [ ] Generate a classification report
-* [ ] Calculate precision, recall, and F1-score
-* [ ] Add a confusion matrix
-* [ ] Analyze performance for each document category
-* [ ] Add appropriate document-image augmentation
-* [ ] Improve experiment reproducibility
-* [ ] Compare DiT with other vision models
-* [ ] Perform hyperparameter optimization
-* [ ] Add inference on new document images
-* [ ] Build a simple web interface for document classification
-
----
-
-## 📌 Example Use Case
-
-A user provides a document image:
-
-```text
-document.jpg
-      │
-      ▼
-   DiT Model
-      │
-      ▼
-Predicted Class
-      │
-      ▼
-   "Resume"
-```
-
-The system can therefore be used as a starting point for automated document organization and classification.
+* Add an independent test set.
+* Add precision, recall, and F1-score.
+* Generate a confusion matrix.
+* Analyze per-class performance.
+* Explore document-specific augmentation.
+* Compare DiT with other vision architectures.
+* Add inference on new document images.
+* Improve experiment reproducibility.
 
 ---
 
 ## 📚 References
 
-* Tobacco3482 document image dataset
+* Tobacco3482 Dataset
 * Microsoft Document Image Transformer (DiT)
 * Hugging Face Transformers
 * PyTorch
 * Scikit-learn
-
-
-
-
